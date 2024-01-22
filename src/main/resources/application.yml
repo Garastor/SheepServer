@@ -1,0 +1,13 @@
+initial:
+  balance: 0
+  sheep: 20
+
+sheep:
+  price: 500
+  yield: 100
+  perishRate: 0.1
+
+scheduling:
+  income: '*/5 * * * * *'
+  status: '*/5 * * * * *'
+  flock: '*/5 * * * * *'
