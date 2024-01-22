@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import javax.ws.rs.NotFoundException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,17 +38,6 @@ public class ShepherdService {
         this.priceOfSheep = priceOfSheep;
     }
 
-    public FlockState getFlockState() {
-        List<Sheep> healthySheep = sheepRepository.findAllByState(State.HEALTHY);
-        List<Sheep> deadSheep = sheepRepository.findAllByState(State.DEAD);
-
-        return new FlockState(healthySheep.size(), deadSheep.size());
-    }
-
-    public BigInteger getBalance() {
-        return currentBalanceRepository.findFirstByOrderByTimestampDesc().getBalance();
-    }
-
     @Transactional
     public String orderNewSheep(int nofSheepDesired) {
         // TODO Implement sheep ordering feature
@@ -60,7 +48,7 @@ public class ShepherdService {
         }
 
         BigInteger totalPriceOfSheep = BigInteger.valueOf(priceOfSheep.longValue() * nofSheepDesired);
-        CurrentBalance currentBalance = currentBalanceRepository.findFirstByOrderByTimestampDesc();
+        CurrentBalance currentBalance = getBalance();
 
         int purchasePossibility = currentBalance
                 .getBalance()
@@ -74,10 +62,33 @@ public class ShepherdService {
             currentBalanceRepository.save(currentBalance);
             sheepRepository.saveAll(newSheep);
             log.info(String.format("%s sheep were ordered", nofSheepDesired));
-            return String.format("In total %s sheep were ordered and added to your flock!", nofSheepDesired);
+            return String.format("In total %s sheep were ordered and added to your flock! %s", nofSheepDesired, getStatus());
         } else {
-            return "Insufficient balance to order sheep.";
+            return String.format("Insufficient balance to order sheep. %s", getStatus());
         }
 
     }
+
+    private String getStatus() {
+        BigInteger currentBalance = getBalance().getBalance();
+        FlockState flockState = getFlockState();
+        int healthySheepNum = flockState.getNumberOfHealthySheep();
+        int deadSheepNum = flockState.getNumberOfDeadSheep();
+        return String.format("\nBalance: %d, number of sheep healthy and dead: [%d, %d]",
+                currentBalance,
+                healthySheepNum,
+                deadSheepNum);
+    }
+
+    private FlockState getFlockState() {
+        List<Sheep> healthySheep = sheepRepository.findAllByState(State.HEALTHY);
+        List<Sheep> deadSheep = sheepRepository.findAllByState(State.DEAD);
+
+        return new FlockState(healthySheep.size(), deadSheep.size());
+    }
+
+    private CurrentBalance getBalance() {
+        return currentBalanceRepository.findFirstByOrderByTimestampDesc();
+    }
+
 }

@@ -19,14 +19,8 @@ public class ShepherdResource {
 
     @GET
     @Path("/status")
-    public HttpStatus getStatus(){
+    public HttpStatus getServerStatus(){
         return HttpStatus.OK;
-    }
-
-    @GET
-    @Path("/balance")
-    public String getBalance() {
-        return service.getBalance().toString();
     }
 
     @GET
